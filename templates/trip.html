@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Travel Planner - Trip</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <!-- Navbar (copied from index.html for consistency) -->
+    <nav>
+      <div class="logo">
+        <img
+          src="{{ url_for('static', filename='assets/logo.png') }}"
+          alt="Logo"
+        />
+        <a href="{{ url_for('index') }}" class="no-underline">JalanJalan.AI</a>
+      </div>
+      <ul>
+        <li><a href="{{ url_for('about') }}">About</a></li>
+        <li><a href="#how">How It works</a></li>
+        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+      </ul>
+    </nav>
+
+    <!-- Two-Column Layout -->
+    <main class="trip-layout">
+      <!-- Left Column: Chatbot (fixed) -->
+      <section class="chatbot-column">
+        <div class="chatbot-box">
+          <p>Chatbot goes here</p>
+        </div>
+      </section>
+
+      <!-- Right Column: Scrollable Itinerary -->
+      <section class="itinerary-column scrollable-itinerary">
+        <h2>Hotels</h2>
+        <div class="hotel-grid">
+          {% for i in range(6) %}
+          <div class="hotel-card">
+            <img
+              src="{{ url_for('static', filename='assets/hotel{{ (i % 3) + 1 }}.jpg') }}"
+              alt="Hotel {{ i+1 }}"
+              class="hotel-image"
+            />
+            <div class="hotel-info">
+              <h3>Hotel {{ i+1 }}</h3>
+              <p class="hotel-location">location, street, city</p>
+              <div class="hotel-meta-row">
+                <span class="hotel-price-group">
+                  <img
+                    src="{{ url_for('static', filename='assets/price-icon.png') }}"
+                    alt="Price"
+                    class="hotel-price-icon"
+                  />
+                  <span class="hotel-price">From ${{ 260 + i*10 }}</span>
+                </span>
+                <span class="hotel-rating-group">
+                  <img
+                    src="{{ url_for('static', filename='assets/rating-icon.png') }}"
+                    alt="Rating"
+                    class="hotel-rating-icon"
+                  />
+                  <span class="hotel-rating">{{ 4.5 - (i*0.1) }}</span>
+                </span>
+              </div>
+              <button class="map-button">View on Map</button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <h2 style="margin-top: 2rem">Weekend Activities</h2>
+
+        <!-- Saturday Schedule -->
+        <div class="day-plan">
+          <h3>Saturday</h3>
+          <div class="activity-grid">
+            <div class="activity-card">
+              <img
+                src="{{ url_for('static', filename='assets/activity.jpg') }}"
+                alt="Activity 1"
+                class="activity-image"
+              />
+              <div class="activity-info">
+                <div style="font-weight: 600">09:00 - 11:00</div>
+                <h3>Visit Ueno Park</h3>
+                <p class="activity-location">Ueno, Tokyo</p>
+                <div class="activity-desc">
+                  Stroll through the beautiful park and enjoy cherry blossoms.
+                </div>
+                <div class="activity-best-time-group">
+                  <img
+                    src="{{ url_for('static', filename='assets/time-icon.png') }}"
+                    alt="Best Time"
+                    class="activity-best-time-icon"
+                  />
+                  <span class="activity-best-time-text">
+                    <strong>Best time to visit:</strong> Early morning for fewer
+                    crowds and best light.
+                  </span>
+                </div>
+                <div class="activity-meta-row">
+                  <span class="activity-price">Free</span>
+                </div>
+                <button class="map-button">View on Map</button>
+              </div>
+            </div>
+            <div class="activity-card">
+              <img
+                src="{{ url_for('static', filename='assets/activity.jpg') }}"
+                alt="Activity 2"
+                class="activity-image"
+              />
+              <div class="activity-info">
+                <div style="font-weight: 600">12:00 - 14:00</div>
+                <h3>Sushi Lunch at Tsukiji</h3>
+                <p class="activity-location">Tsukiji Market, Tokyo</p>
+                <div class="activity-desc">
+                  Enjoy fresh sushi at the world-famous market.
+                </div>
+                <div class="activity-best-time-group">
+                  <img
+                    src="{{ url_for('static', filename='assets/time-icon.png') }}"
+                    alt="Best Time"
+                    class="activity-best-time-icon"
+                  />
+                  <span class="activity-best-time-text">
+                    <strong>Best time to visit:</strong> Around noon for the
+                    freshest catch.
+                  </span>
+                </div>
+                <div class="activity-meta-row">
+                  <span class="activity-price">$25</span>
+                </div>
+                <button class="map-button">View on Map</button>
+              </div>
+            </div>
+            <!-- Add more activities for Saturday as needed -->
+          </div>
+        </div>
+
+        <!-- Sunday Schedule -->
+        <div class="day-plan">
+          <h3>Sunday</h3>
+          <div class="activity-grid">
+            <div class="activity-card">
+              <img
+                src="{{ url_for('static', filename='assets/activity.jpg') }}"
+                alt="Activity 3"
+                class="activity-image"
+              />
+              <div class="activity-info">
+                <div style="font-weight: 600">10:00 - 12:00</div>
+                <h3>Meiji Shrine Visit</h3>
+                <p class="activity-location">Shibuya, Tokyo</p>
+                <div class="activity-desc">
+                  Explore the peaceful Meiji Shrine and its gardens.
+                </div>
+                <div class="activity-best-time-group">
+                  <img
+                    src="{{ url_for('static', filename='assets/time-icon.png') }}"
+                    alt="Best Time"
+                    class="activity-best-time-icon"
+                  />
+                  <span class="activity-best-time-text">
+                    <strong>Best time to visit:</strong> Late morning for a
+                    tranquil experience.
+                  </span>
+                </div>
+                <div class="activity-meta-row">
+                  <span class="activity-price">$5</span>
+                </div>
+                <button class="map-button">View on Map</button>
+              </div>
+            </div>
+            <div class="activity-card">
+              <img
+                src="{{ url_for('static', filename='assets/activity.jpg') }}"
+                alt="Activity 4"
+                class="activity-image"
+              />
+              <div class="activity-info">
+                <div style="font-weight: 600">13:00 - 15:00</div>
+                <h3>Shopping in Harajuku</h3>
+                <p class="activity-location">Takeshita St, Tokyo</p>
+                <div class="activity-desc">
+                  Discover unique fashion and souvenirs in Harajuku.
+                </div>
+                <div class="activity-best-time-group">
+                  <img
+                    src="{{ url_for('static', filename='assets/time-icon.png') }}"
+                    alt="Best Time"
+                    class="activity-best-time-icon"
+                  />
+                  <span class="activity-best-time-text">
+                    <strong>Best time to visit:</strong> Early afternoon for
+                    lively street scenes.
+                  </span>
+                </div>
+                <div class="activity-meta-row">
+                  <span class="activity-price">$20</span>
+                </div>
+                <button class="map-button">View on Map</button>
+              </div>
+            </div>
+            <!-- Add more activities for Sunday as needed -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About Us - JalanJalan.AI</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+    <style>
+      body {
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        color: #222;
+        background: linear-gradient(180deg, #fff6f3 0%, #ffffff 100%);
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      /* === Gradient Blobs === */
+      .blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.35;
+        animation: float 15s ease-in-out infinite;
+        z-index: 0;
+      }
+      .blob1 {
+        width: 220px;
+        height: 220px;
+        background: #ff7636;
+        top: 18%;
+        left: 12%;
+      }
+      .blob2 {
+        width: 260px;
+        height: 260px;
+        background: #ff9a6c;
+        top: 50%;
+        left: 55%;
+      }
+      .blob3 {
+        width: 180px;
+        height: 180px;
+        background: #ffb08c;
+        top: 30%;
+        left: 75%;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0) translateX(0);
+        }
+        50% {
+          transform: translateY(-20px) translateX(15px);
+        }
+      }
+
+      /* === About Section === */
+      .about-container {
+        max-width: 750px;
+        margin: 3rem auto;
+        text-align: center;
+        padding: 1.5rem;
+        position: relative;
+        z-index: 2;
+      }
+
+      h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1.3;
+        margin-bottom: 1.2rem;
+      }
+
+      h1 .highlight {
+        position: relative;
+        display: inline-block;
+        z-index: 1;
+      }
+
+      h1 .highlight::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        width: 100%;
+        height: 0.55em; /* Adjust for your underline image's aspect ratio */
+        bottom: -0.08em; /* Negative value to tuck the underline snug under the text */
+        background: url("{{ url_for('static', filename='assets/underline.png') }}")
+          no-repeat left bottom;
+        background-size: 100% 100%;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .subheading {
+        font-size: 1.2rem;
+        font-weight: 500;
+        color: #444;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+      }
+
+      p {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #555;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* === Fade-in Animation === */
+      .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+      }
+      .fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav>
+      <div class="logo">
+        <img
+          src="{{ url_for('static', filename='assets/logo.png') }}"
+          alt="Logo"
+        />
+        <a href="{{ url_for('index') }}" class="no-underline">JalanJalan.AI</a>
+      </div>
+      <ul>
+        <li><a href="{{ url_for('about') }}" class="active">About</a></li>
+        <li><a href="{{ url_for('index') }}#how">How It Works</a></li>
+        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+      </ul>
+    </nav>
+
+    <!-- Blobs -->
+    <div class="blob blob1"></div>
+    <div class="blob blob2"></div>
+    <div class="blob blob3"></div>
+
+    <!-- About Section -->
+    <div class="about-container">
+      <h1 class="fade-in">
+        Your <span class="highlight">ultimate</span> AI-powered travel companion
+      </h1>
+      <div class="subheading fade-in">
+        Smart, personalized itineraries designed to help you explore
+        destinations efficiently and enjoyably.
+      </div>
+      <p class="fade-in">
+        Whether you're a solo traveler, a couple, or a family, JalanJalan.AI
+        ensures your journey is optimized with curated recommendations for
+        attractions, restaurants, and hidden gems — making every trip
+        unforgettable.
+      </p>
+    </div>
+
+    <script>
+      // Scroll-triggered animations
+      const elements = document.querySelectorAll(".fade-in");
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+            }
+          });
+        },
+        { threshold: 0.2 }
+      );
+
+      elements.forEach((el) => observer.observe(el));
+    </script>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Travel Planner</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="hero">
+      <!-- Navbar -->
+      <nav>
+        <div class="logo">
+          <img
+            src="{{ url_for('static', filename='assets/logo.png') }}"
+            alt="Logo"
+          />
+          <a href="{{ url_for('index') }}" class="no-underline"
+            >JalanJalan.AI</a
+          >
+        </div>
+        <ul>
+          <li><a href="{{ url_for('about') }}">About</a></li>
+          <li><a href="#how">How It works</a></li>
+          <li><a href="{{ url_for('contact') }}">Contact</a></li>
+        </ul>
+      </nav>
+
+      <!-- Hero section -->
+      <div class="hero-content">
+        <h1>Plan Your <span>Perfect Weekend</span> In Seconds</h1>
+        <p>Your next destination, intelligently planned.</p>
+        <a href="{{ url_for('trip') }}">Plan my trip ➝</a>
+      </div>
+    </div>
+
+    <!-- How It Works Section -->
+    <section id="how">
+      <h2>How It Works</h2>
+      <div class="steps">
+        <div class="step">
+          <h3>1. Tell Us Your Preferences</h3>
+          <p>Enter your travel dates, budget, and interests.</p>
+        </div>
+        <div class="step">
+          <h3>2. AI Builds Your Itinerary</h3>
+          <p>Our AI creates a smart, optimized weekend plan just for you.</p>
+        </div>
+        <div class="step">
+          <h3>3. Explore & Enjoy</h3>
+          <p>
+            Get a personalized itinerary with maps, recommendations, and
+            activities.
+          </p>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
