@@ -30,11 +30,7 @@ This project requires two API keys to function correctly.
     -   Go to [Google AI Studio](https://aistudio.google.com/).
     -   Click on "Get API key" and create a new API key.
 
-2.  **Get your Foursquare API Key:**
-    -   Go to the [Foursquare for Developers](https://location.foursquare.com/developer/) website and create an account.
-    -   In your developer dashboard, create a new project to get your API key.
-
-3.  **Set up your `.env` file:**
+2.  **Set up your `.env` file:**
     -   Open the `.env` file in the project directory.
     -   Replace the placeholder values with the API keys you obtained.
     ```
