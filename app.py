@@ -1,199 +1,103 @@
-from flask import Flask, jsonify, request, render_template
-from flask_cors import CORS
-import psycopg2
-from dotenv import load_dotenv
 import os
 import json
+import urllib.parse
 import google.generativeai as genai
+from dotenv import load_dotenv
+from database import database
+from prompts import SYSTEM_PROMPT, USER_PROMPT_TEMPLATE
+from flask import Flask, request, jsonify, render_template, url_for
 
+# Load environment variables
 load_dotenv()
+
+# Configure APIs
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
+# Initialize the generative model for text
+model = genai.GenerativeModel('gemini-2.5-pro')
 app = Flask(__name__)
-CORS(app)
 
-# -------------------------
-# DB config
-# -------------------------
-DB_CONFIG = {
-    "dbname": os.getenv("DB_NAME", "itinerary_db"),
-    "user": os.getenv("DB_USER", "postgres"),
-    "password": os.getenv("DB_PASSWORD", ""),
-    "host": os.getenv("DB_HOST", "localhost"),
-    "port": os.getenv("DB_PORT", 5432)
-}
+def get_pollinations_image(query, destination):
+    """Generates an image URL from Pollinations.ai based on a query."""
+    # URL-encode the query
+    encoded_query = urllib.parse.quote_plus(f"cinematic photograph of {query} in {destination}")
+    # Construct the URL with a specific size for consistency
+    image_url = f"https://image.pollinations.ai/prompt/{encoded_query}?width=600&height=400&nologo=true"
+    return image_url
 
-def get_db_connection():
-    conn = psycopg2.connect(**DB_CONFIG)
-    return conn
-
-def query_db(query, args=(), one=False):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    rv = None
-    try:
-        cur.execute(query, args)
-        if cur.description:
-            rv = cur.fetchall()
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        print(f"[DB] error: {e}")
-        raise
-    finally:
-        cur.close()
-        conn.close()
-    return (rv[0] if rv else None) if one else rv
-
-# -------------------------
-# Get POIs
-# -------------------------
-def get_pois(budget, interests, travel_style):
-    rows = query_db(
-        "SELECT name, category, description, latitude, longitude FROM poi "
-        "WHERE budget_level=%s AND category=ANY(%s) AND (travel_style=%s OR travel_style IS NULL)",
-        (budget, interests, travel_style)
-    )
-    return [{"name": r[0], "category": r[1], "description": r[2], "lat": r[3], "lon": r[4]} for r in rows]
-
-# -------------------------
-# Conversation memory
-# -------------------------
-conversation_state = {}
-SYSTEM_PROMPT = """You are JalanJalan.AI, a friendly travel assistant.
-Guide the user step-by-step to create a weekend trip.
-Always respond conversationally and provide buttons for budget, travel style, and interests."""
-
-@app.route("/")
+@app.route('/')
 def index():
-    return render_template("index.html")
+    return render_template('index.html')
 
-# ...existing code...
+@app.route('/about')
+def about():
+    return render_template('about.html')
 
-@app.route("/chat", methods=["POST"])
-def chat():
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
+
+@app.route('/trip')
+def trip():
+    return render_template('trip.html')
+
+@app.route('/generate', methods=['POST'])
+def generate():
     try:
         data = request.json
-        user_id = data.get("user_id", "default")
-        user_message = data.get("message", "").strip()
+        budget = data.get('budget')
+        interests = data.get('interests')
+        travel_style = data.get('travel_style')
+        days = data.get('days')
+        destination = data.get('destination')
 
-        if not conversation_state.get(user_id):
-            conversation_state[user_id] = {
-                "history": [],
-                "stage": "idle",
-                "prefs": {},
-                "pois": []
-            }
+        itinerary_json = generate_itinerary(budget, interests, travel_style, days, destination)
 
-        state = conversation_state[user_id]
-        state["history"].append({"role": "user", "content": user_message})
+        if 'error' in itinerary_json:
+            return jsonify(itinerary_json)
 
-        # --- Stage 1: User wants to create a trip ---
-        if state["stage"] == "idle" and "create" in user_message.lower() and "trip" in user_message.lower():
-            state["stage"] = "ask_budget"
-            reply = """
-            Great! Let's plan your weekend trip 🗺️<br>
-            <b>Select your budget:</b><br>
-            <button class='preference-btn' data-type='budget' data-value='low'>Low</button>
-            <button class='preference-btn' data-type='budget' data-value='medium'>Medium</button>
-            <button class='preference-btn' data-type='budget' data-value='high'>High</button>
-            """
-            return jsonify({"reply": reply})
+        # Enrich with Pollinations images
+        for day_plan in itinerary_json.get('itinerary', []):
+            for activity in day_plan.get('activities', []):
+                location_name = activity.get('location_name')
+                if location_name:
+                    activity['photo'] = get_pollinations_image(location_name, destination)
 
-        # --- Stage 2-4: Collect preferences via buttons ---
-        try:
-            pref_data = json.loads(user_message)
-            pref_type = pref_data.get("preference_type")
-            value = pref_data.get("value")
-        except Exception:
-            pref_type = value = None
+        # Enrich accommodation with images
+        for accommodation in itinerary_json.get('accommodation', []):
+            acc_name = accommodation.get('name')
+            if acc_name:
+                accommodation['photo'] = get_pollinations_image(acc_name, destination)
 
-        if state["stage"] == "ask_budget" and pref_type == "budget":
-            state["prefs"]["budget"] = value
-            state["stage"] = "ask_travel_style"
-            reply = f"""
-            Got it! Budget: <b>{value}</b><br>
-            Select your travel style:<br>
-            <button class='preference-btn' data-type='travel_style' data-value='relaxed'>Relaxed</button>
-            <button class='preference-btn' data-type='travel_style' data-value='adventurous'>Adventurous</button>
-            <button class='preference-btn' data-type='travel_style' data-value='family-friendly'>Family-friendly</button>
-            """
-            return jsonify({"reply": reply})
-
-        if state["stage"] == "ask_travel_style" and pref_type == "travel_style":
-            state["prefs"]["travel_style"] = value
-            state["stage"] = "ask_interests"
-            reply = """
-            Great! Now select your interests:<br>
-            <button class='preference-btn' data-type='interest' data-value='alam'>Alam</button>
-            <button class='preference-btn' data-type='interest' data-value='kuliner'>Kuliner</button>
-            <button class='preference-btn' data-type='interest' data-value='sejarah'>Sejarah</button>
-            <button class='preference-btn' data-type='interest' data-value='belanja'>Belanja</button>
-            <button class='preference-btn' data-type='interest' data-value='santai'>Santai</button><br>
-            <button class='preference-btn' data-type='confirm_interests' data-value='done'>Done</button>
-            """
-            state["prefs"]["interests"] = []
-            return jsonify({"reply": reply})
-
-        if state["stage"] == "ask_interests" and pref_type == "interest":
-            if value not in state["prefs"]["interests"]:
-                state["prefs"]["interests"].append(value)
-            return jsonify({"reply": f"Added interest: <b>{value}</b>"})
-
-        if state["stage"] == "ask_interests" and pref_type == "confirm_interests":
-            state["stage"] = "suggest_options"
-            budget = state["prefs"]["budget"]
-            style = state["prefs"]["travel_style"]
-            interests = state["prefs"]["interests"]
-
-            pois = get_pois(budget, interests, style)
-            state["pois"] = pois
-            reply = "<b>Here are suggested POIs for your trip:</b><br>"
-            for p in pois:
-                reply += f"- {p['name']} ({p['category']}): {p['description']}<br>"
-            reply += "<br><button class='preference-btn' data-type='generate_itinerary' data-value='yes'>Confirm & Generate Hourly Itinerary</button>"
-            return jsonify({"reply": reply, "pois": pois})
-
-        # --- Stage 5: Generate itinerary ---
-        if state["stage"] == "suggest_options" and pref_type == "generate_itinerary":
-            prefs = state["prefs"]
-            pois = state["pois"]
-
-            poi_text = "\n".join([f"- {p['name']} ({p['category']})" for p in pois])
-            prompt = f"""
-            You are JalanJalan.AI. User preferences: Budget {prefs['budget']}, Travel style {prefs['travel_style']}, Interests {', '.join(prefs['interests'])}.
-            Suggested POIs: {poi_text}
-            Generate a weekend itinerary, hour-by-hour, JSON array with fields: time, title, description, poi_name, lat, lon
-            """
-            model = genai.GenerativeModel("gemini-1.5-flash")
-            response = model.generate_content(prompt)
-
-            try:
-                itinerary = json.loads(response.text)
-                reply = "✅ Hour-by-hour itinerary generated!"
-            except Exception:
-                itinerary = [{"time": "", "title": "Itinerary", "description": response.text, "poi_name": None, "lat": None, "lon": None}]
-                reply = "✅ Itinerary generated, but could not parse as JSON. Showing as text."
-
-            state["stage"] = "completed"
-            return jsonify({"reply": reply, "itinerary": itinerary})
-
-        # --- Default: AI fallback ---
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        full_prompt = f"{SYSTEM_PROMPT}\n\nConversation history:\n"
-        for turn in state["history"]:
-            full_prompt += f"{turn['role']}: {turn['content']}\n"
-        full_prompt += f"user: {user_message}"
-
-        ai_response = model.generate_content(full_prompt)
-        state["history"].append({"role": "assistant", "content": ai_response.text})
-        return jsonify({"reply": ai_response.text})
-
+        return jsonify(itinerary_json)
     except Exception as e:
-        print(f"[CHAT] error: {e}")
-        return jsonify({"reply": "⚠️ Internal server error. Please try again later."}), 500
+        print(f"An unexpected error occurred: {e}")
+        return jsonify({"error": "An unexpected error occurred on the server. Please try again."}), 500
 
-# ...existing code...
+def generate_itinerary(budget, interests, travel_style, days, destination):
+    """Generates a personalized weekend itinerary as a JSON object."""
+    user_prompt = USER_PROMPT_TEMPLATE.format(
+        budget=budget,
+        interests=interests,
+        travel_style=travel_style,
+        days=days,
+        destination=destination
+    )
+    
+    full_prompt = SYSTEM_PROMPT.format(destination=destination) + f"\n\nHere is the curated database of attractions and activities:\n{json.dumps(database['destinations'], indent=2)}\n\n{user_prompt}"
+    
+    try:
+        response = model.generate_content(full_prompt)
+        # Clean the response to extract the JSON part
+        cleaned_response = response.text.strip().replace('```json', '').replace('```', '').strip()
+        return json.loads(cleaned_response)
+    except (json.JSONDecodeError, Exception) as e:
+        print(f"Error decoding AI response: {e}")
+        return {"error": "Failed to generate a valid itinerary. Please try again."}
+
+@app.route('/.well-known/appspecific/com.chrome.devtools.json')
+def devtools():
+    return '', 204
 
 if __name__ == "__main__":
     app.run(debug=True)
