@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JalanJalan.AI - Weekend Itinerary Planner</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 400px; margin-top: 20px; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>JalanJalan.AI 🤖</h1>
+    <p class="tagline">Your AI-powered weekend itinerary planner!</p>
+
+    <div class="main-layout">
+      <div class="chat-section full-width">
+        <h2>Chat with JalanJalan.AI</h2>
+        <div id="chatBox">
+          <div class="chat-bot">
+            Hello 👋 I'm JalanJalan.AI!  
+            Tell me your <b>budget</b> (low/medium/high), <b>interests</b> (alam, kuliner, sejarah, belanja, santai), and <b>travel style</b> (adventurous, relaxed, family-friendly).<br>
+            Type <b>"Create a new trip"</b> to start planning.
+          </div>
+        </div>
+        <div class="chat-input-group">
+          <input type="text" id="chatInput" placeholder="Type your message..." />
+          <button id="sendChatBtn">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map container -->
+    <div id="map"></div>
+
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
