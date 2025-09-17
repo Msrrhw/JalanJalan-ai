@@ -39,7 +39,6 @@ This project requires two API keys to function correctly.
     -   Replace the placeholder values with the API keys you obtained.
     ```
     GEMINI_API_KEY="YOUR_GEMINI_API_KEY"
-    FOURSQUARE_API_KEY="YOUR_FOURSQUARE_API_KEY"
     ```
 
 ## How to Run
